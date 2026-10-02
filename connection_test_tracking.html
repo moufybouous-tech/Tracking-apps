@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tracking Sheet Connection Test</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0f1f3d;--navy2:#1a2f54;--gold:#c9a84c;--gold2:#e8c96a;--cream2:#ede5d0;--green:#2D6A2D;--red:#8b2020;--white:#fff;}
+body{font-family:Georgia,serif;background:var(--navy);color:var(--white);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 16px}
+.card{background:rgba(26,47,84,.95);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:24px 20px;width:100%;max-width:460px}
+h1{font-size:18px;color:var(--gold);margin-bottom:6px}
+.sub{color:var(--cream2);font-size:13px;margin-bottom:18px;line-height:1.6}
+.url-box{background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:10px 12px;font-size:11px;color:rgba(255,255,255,.5);word-break:break-all;margin-bottom:16px}
+.btn{width:100%;padding:13px;background:var(--gold);border:none;border-radius:10px;font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;font-family:Georgia,serif}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.log{margin-top:16px;font-size:13px;line-height:1.9}
+.step{display:flex;gap:8px;align-items:flex-start;color:rgba(255,255,255,.5)}
+.step.done{color:var(--cream2)}
+.mark{flex-shrink:0;width:16px;font-weight:700}
+.result-box{margin-top:16px;border-radius:10px;padding:14px;text-align:center;font-size:14px;font-weight:700;display:none}
+.result-pass{background:rgba(45,106,45,.2);border:1px solid var(--green);color:#90ee90}
+.result-fail{background:rgba(139,32,32,.2);border:1px solid var(--red);color:#ff9090}
+.note{color:rgba(255,255,255,.35);font-size:11.5px;margin-top:14px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Tracking Sheet Connection Test</h1>
+  <div class="sub">This sends one test write the same way the real apps do, then asks the Sheet directly whether it arrived — the only step in this whole system that can give a real yes or no instead of a guess.</div>
+  <div class="url-box" id="url-display"></div>
+  <button class="btn" id="run-btn" onclick="runTest()">Run Connection Test</button>
+  <div class="log" id="log"></div>
+  <div class="result-box" id="result"></div>
+  <div class="note">Run this from the actual hosted link (GitHub Pages), the same way students open the real apps — not from a local copy or a chat preview, since those can behave differently.</div>
+</div>
+
+<script>
+// Paste the same SHEET_URL used in the app you're troubleshooting.
+const SHEET_URL="https://script.google.com/macros/s/AKfycbyoG_ndKf4AF_L2xkVAbJHOhabOYxaxbdXEuxM3vnZhWhN84_snQhsAwBaXkXldacLr/exec";
+
+document.getElementById('url-display').textContent=SHEET_URL;
+
+function addStep(text,done){
+  const log=document.getElementById('log');
+  const div=document.createElement('div');
+  div.className='step'+(done?' done':'');
+  div.innerHTML='<span class="mark">'+(done?'\u2713':'\u2026')+'</span><span>'+text+'</span>';
+  log.appendChild(div);
+  return div;
+}
+
+async function runTest(){
+  document.getElementById('run-btn').disabled=true;
+  document.getElementById('log').innerHTML='';
+  document.getElementById('result').style.display='none';
+
+  if(!SHEET_URL||SHEET_URL.indexOf('PASTE_YOUR')===0){
+    showResult(false,'No SHEET_URL is set in this test page. Paste the same URL used in your app first.');
+    document.getElementById('run-btn').disabled=false;
+    return;
+  }
+
+  const id='test_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  const s1=addStep('Sending a test write to the Sheet\u2026',false);
+  try{
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'ping',id})});
+    s1.className='step done';s1.querySelector('.mark').textContent='\u2713';
+    s1.querySelector('span:last-child').textContent='Test write sent (the browser cannot confirm delivery at this step \u2014 that\'s the next one).';
+  }catch(e){
+    s1.querySelector('span:last-child').textContent='Could not even send the request \u2014 no internet connection, or the URL is malformed.';
+    showResult(false,'FAIL \u2014 the request never left this device. Check your internet connection and the URL above.');
+    document.getElementById('run-btn').disabled=false;
+    return;
+  }
+
+  const s2=addStep('Waiting a few seconds for Google to process it\u2026',false);
+  await new Promise(r=>setTimeout(r,4000));
+  s2.className='step done';s2.querySelector('.mark').textContent='\u2713';
+
+  const s3=addStep('Asking the Sheet directly whether it arrived\u2026',false);
+  try{
+    const res=await fetch(SHEET_URL+'?action=checkPing&id='+encodeURIComponent(id)+'&cb='+Date.now(),{method:'GET',mode:'cors'});
+    const txt=(await res.text()).trim();
+    s3.className='step done';s3.querySelector('.mark').textContent='\u2713';
+    if(txt==='FOUND'){
+      s3.querySelector('span:last-child').textContent='The Sheet confirms it received the test write.';
+      showResult(true,'PASS \u2014 this link, this URL, and this deployment all work end to end. If real results still seem to be missing, the problem is elsewhere (a different SHEET_URL in that app, or looking at the wrong Sheet) rather than the connection itself.');
+    }else{
+      s3.querySelector('span:last-child').textContent='The Sheet says it did NOT receive the test write (response: "'+txt+'").';
+      showResult(false,'FAIL \u2014 the connection reached Google but the write did not land. Most likely causes: the deployment\'s access is not set to Anyone, or the script was edited but never redeployed as a new version.');
+    }
+  }catch(e){
+    s3.querySelector('span:last-child').textContent='Could not reach the Sheet at all to check (error: '+e.message+').';
+    showResult(false,'FAIL \u2014 this device cannot reach the deployment. Most likely causes: the deployment access is not set to Anyone, the URL is wrong or outdated, or the deployment was deleted.');
+  }
+  document.getElementById('run-btn').disabled=false;
+}
+
+function showResult(pass,text){
+  const box=document.getElementById('result');
+  box.style.display='block';
+  box.className='result-box '+(pass?'result-pass':'result-fail');
+  box.textContent=text;
+}
+</script>
+</body>
+</html>

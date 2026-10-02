@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>L3 Attendance Tracker &mdash; Literature: Theory &amp; Practice</title>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0f1f3d;--navy2:#1a2f54;--gold:#c9a84c;--gold2:#e8c96a;--cream:#f7f2e8;--cream2:#ede5d0;--red:#8b2020;--green:#2D6A2D;--amber:#8a6a1d;--white:#fff;}
+body{font-family:Georgia,serif;background:var(--navy);color:var(--white);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+.logo{text-align:center;margin-bottom:20px}
+.logo-badge{display:inline-block;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);border-radius:8px;padding:6px 18px;color:var(--gold);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:11px}
+.logo h1{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:5px}
+.logo p{color:var(--cream2);font-size:13px;font-style:italic}
+
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid rgba(201,168,76,.25)}
+.tab{flex:1;text-align:center;padding:11px 6px;font-size:12px;color:rgba(255,255,255,.5);cursor:pointer;border-bottom:2px solid transparent;font-family:Georgia,serif;background:none;border-top:none;border-left:none;border-right:none;text-transform:uppercase;letter-spacing:1px}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+.panel{display:none}
+.panel.active{display:block}
+
+.card{background:rgba(26,47,84,.9);border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:18px;margin-bottom:16px}
+.card h2{color:var(--gold);font-size:13px;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
+label{display:block;color:rgba(255,255,255,.55);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;margin-top:12px}
+label:first-child{margin-top:0}
+select,input[type=date],input[type=text]{width:100%;padding:11px 12px;border-radius:9px;font-size:14px;border:2px solid rgba(201,168,76,.3);background:rgba(0,0,0,.35);color:var(--white);outline:none;font-family:Georgia,serif}
+select option{background:#1a2f54;color:var(--white)}
+select:focus,input:focus{border-color:var(--gold)}
+
+.btn{display:inline-block;padding:12px 20px;background:var(--gold);border:none;border-radius:9px;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;font-family:Georgia,serif}
+.btn-outline{background:transparent;border:2px solid var(--gold);color:var(--gold)}
+.btn-red{background:var(--red);color:var(--white)}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.btn-row .btn{flex:1;min-width:130px;text-align:center}
+
+.note{color:rgba(255,255,255,.45);font-size:12px;line-height:1.6;margin-top:10px}
+.existing-flag{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:8px;padding:8px 12px;color:var(--gold2);font-size:12px;margin-top:12px}
+
+.counts-bar{display:flex;gap:8px;margin-bottom:14px}
+.count-pill{flex:1;border-radius:9px;padding:9px 6px;text-align:center;border:1px solid}
+.count-pill .n{font-size:20px;font-weight:700}
+.count-pill .l{font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.count-pill.present{background:rgba(45,106,45,.15);border-color:rgba(45,106,45,.4);color:#90ee90}
+.count-pill.absent{background:rgba(139,32,32,.15);border-color:rgba(139,32,32,.4);color:#ff9090}
+.count-pill.late{background:rgba(138,106,29,.2);border-color:rgba(201,168,76,.4);color:var(--gold2)}
+
+.stu-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);margin-bottom:6px;cursor:pointer;user-select:none}
+.stu-row .num{color:rgba(255,255,255,.3);font-size:11px;width:22px;flex-shrink:0}
+.stu-row .name{flex:1;font-size:13.5px;color:var(--cream2)}
+.status-badge{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:5px 12px;border-radius:7px;border:1px solid;flex-shrink:0;min-width:74px;text-align:center}
+.status-badge.present{background:rgba(45,106,45,.2);border-color:var(--green);color:#90ee90}
+.status-badge.absent{background:rgba(139,32,32,.2);border-color:var(--red);color:#ff9090}
+.status-badge.late{background:rgba(201,168,76,.15);border-color:var(--gold);color:var(--gold2)}
+
+.search-box{margin-bottom:12px}
+
+.sum-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.sum-table th{text-align:left;color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:1px;padding:8px 8px;border-bottom:1px solid rgba(201,168,76,.3)}
+.sum-table td{padding:8px 8px;border-bottom:1px solid rgba(255,255,255,.06);color:var(--cream2)}
+.sum-table tr:hover td{background:rgba(255,255,255,.03)}
+.sum-table .num-col{text-align:center;font-weight:700}
+.sum-table .flag{color:#ff9090}
+
+.session-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.session-item .meta{font-size:12.5px;color:var(--cream2)}
+.session-item .meta .d{color:var(--gold2);font-weight:700}
+.session-item .meta .s{color:rgba(255,255,255,.4);font-size:11px;display:block;margin-top:2px}
+.session-item .acts{display:flex;gap:6px}
+.session-item .acts button{padding:7px 12px;font-size:11px;border-radius:7px;border:1px solid rgba(201,168,76,.4);background:transparent;color:var(--gold);cursor:pointer;font-family:Georgia,serif}
+.session-item .acts button.del{border-color:rgba(139,32,32,.4);color:#ff9090}
+
+.empty{color:rgba(255,255,255,.35);font-size:13px;text-align:center;padding:30px 10px}
+
+.footer{text-align:center;margin-top:20px;color:rgba(255,255,255,.2);font-size:11px}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-badge">Mohamed-Cherif Messaadia University &middot; Souk Ahras</div>
+    <h1>L3 Attendance Tracker</h1>
+    <p>Literature: Theory &amp; Practice &middot; 2026&ndash;2027</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="mark" onclick="switchTab('mark')">Mark Attendance</button>
+    <button class="tab" data-tab="summary" onclick="switchTab('summary')">Summary</button>
+    <button class="tab" data-tab="history" onclick="switchTab('history')">Session History</button>
+  </div>
+
+  <!-- MARK ATTENDANCE -->
+  <div class="panel active" id="panel-mark">
+
+    <div class="card" id="setup-card">
+      <h2>Start a Session</h2>
+      <label>Group</label>
+      <select id="sel-group" onchange="onSetupChange()">
+        <option value="">Select group&hellip;</option>
+        <option value="Group 1">Group 1</option>
+        <option value="Group 2">Group 2</option>
+        <option value="Group 3">Group 3</option>
+      </select>
+      <label>Date</label>
+      <input type="date" id="sel-date" onchange="onSetupChange()">
+      <label>Lecture / Subject</label>
+      <select id="sel-subject" onchange="onSetupChange()">
+        <option value="">Select lecture&hellip;</option>
+        <option>L1 - Heart of Darkness</option>
+        <option>L2 - The Second Coming</option>
+        <option>L3 - The Waste Land</option>
+        <option>L4 - The Great Gatsby</option>
+        <option>L5 - Mrs Dalloway</option>
+        <option>L6 - Slave Narratives</option>
+        <option>L7 - The Ethics of Living Jim Crow</option>
+        <option>L8 - The Harlem Renaissance</option>
+        <option>L9 - Invisible Man</option>
+        <option>L10 - Go Tell It on the Mountain</option>
+        <option value="__other__">Other (type below)</option>
+      </select>
+      <input type="text" id="sel-subject-other" placeholder="Type subject name&hellip;" style="display:none;margin-top:8px">
+      <div id="existing-flag" style="display:none" class="existing-flag"></div>
+      <div class="btn-row">
+        <button class="btn" onclick="startSession()">Open Session &rarr;</button>
+      </div>
+    </div>
+
+    <div class="card" id="marking-card" style="display:none">
+      <h2 id="marking-title">Marking</h2>
+      <div class="counts-bar">
+        <div class="count-pill present"><div class="n" id="cnt-present">0</div><div class="l">Present</div></div>
+        <div class="count-pill absent"><div class="n" id="cnt-absent">0</div><div class="l">Absent</div></div>
+        <div class="count-pill late"><div class="n" id="cnt-late">0</div><div class="l">Late</div></div>
+      </div>
+      <div class="note">Tap a student to cycle Present &rarr; Absent &rarr; Late &rarr; Present. Everyone starts marked Present.</div>
+      <div id="stu-list" style="margin-top:12px"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="markAll('present')">Mark All Present</button>
+        <button class="btn btn-outline" onclick="markAll('absent')">Mark All Absent</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="saveSession()">Save Session</button>
+        <button class="btn btn-outline" onclick="cancelSession()">Cancel</button>
+      </div>
+      <div id="sync-status" class="note" style="text-align:center"></div>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="panel" id="panel-summary">
+    <div class="card">
+      <h2>Absence Summary</h2>
+      <label>Group</label>
+      <select id="sum-group" onchange="renderSummary()">
+        <option value="Group 1">Group 1</option>
+        <option value="Group 2">Group 2</option>
+        <option value="Group 3">Group 3</option>
+      </select>
+      <div class="search-box">
+        <label>Search by name</label>
+        <input type="text" id="sum-search" placeholder="Type a name to filter&hellip;" oninput="renderSummary()">
+      </div>
+      <div id="summary-table-wrap"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="exportSummaryCSV()">Export Summary (CSV)</button>
+        <button class="btn btn-outline" onclick="exportFullLogCSV()">Export Full Log (CSV)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSION HISTORY -->
+  <div class="panel" id="panel-history">
+    <div class="card">
+      <h2>Backup &amp; Restore</h2>
+      <div class="note">All data here lives only in this browser. Export a backup file regularly and keep it somewhere safe (email it to yourself, save it to a Drive folder). If this device or browser ever loses its data, Import Backup restores it.</div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="exportBackup()">Export Backup</button>
+        <button class="btn btn-outline" onclick="document.getElementById('import-input').click()">Import Backup</button>
+      </div>
+      <input type="file" id="import-input" accept=".json" style="display:none" onchange="importBackup(this)">
+      <div id="import-status"></div>
+    </div>
+    <div class="card">
+      <h2>Saved Sessions</h2>
+      <div id="history-list"></div>
+    </div>
+  </div>
+
+  <div class="footer">Department of English &middot; Dr. Boumous</div>
+</div>
+
+<script>
+const DEFAULT_STUDENTS={
+"Group 1":["ABABSIA Salsabil","ABABSIA Lyna","ABBOUDI Meriem","ABDI Ahmed Yassine","AISSAOUI Sandra","AIT OUBELLI Anouar Amine","AMAMRIA Abdelaziz","AMARNIA Lina","AOUAMRIA Rahma","ARAIBIA Ilyas","ARGOUB Nada","ATEK Rahma","BACHA Manel Nour El Houda","BADI Aya","BEDAIRIA Nour El Yakine","BELFAR Mohammed Abdelhadi","BELGHIT Mohamed Abdelkadous","BELOUCIF Djena","BENAOUADI Isra","BENCHAABANE Yasser","BENGHIDA Feriel","BENNACER Nermine","BOUHENCHIR Rahma","CHAALANE Ayat Allah","CHAALENE Khaoula","CHABACA Belkis Doua","DERBAL Abdelaziz","DRIDI Ikhlas","FERAHNA Belgacem","GUEHRIA Aissa Abd El Moudjoud","GUELMANI Rahma","HABTOUN Selma","HACHAD Nardjes","HADFI Tahar","HAMADI Ritadj","HAMAIDIA Rahma","HANDEL Mohamed El Hadi","HELAIMIA Djihane","KEDADRIA Yahia","KELBOUZ Rachida","KHEMAISSIA Ines","LADJAILIA Amani","LADJAILIA Roumaissa","LIMAMI Ilhem","REDJAIBIA Amani","SAAIDIA Meriama Souha","TELAIDJIA Rayane","TEMIMI Mohammed Temim","TEMIMI Nourelyakine","YAHIA Grairia","YAHIA Mohamed Abderraouf","ZAALENE Malak Nour El Imene"],
+"Group 2":["BENDJEDID Fatma Zohra","BENDJERBOUH Riadh Abdel Djalil","BENFAIALA Abir","BENOUARET Serour","BENSOLA Khouloud","BENYAHIA Haithem","BENZINE Kenza","BERRIG Ines","BOUADJILA Ouissal","BOUAFIA Chaima","BOUKERDOUGHA Aya","BOULIFA Amel","BOUMAZA Khaled Amir","BOUMESHAD Amani","BOURBIA Esma","BOUROUINA Kinza","BOUSEBOUA Amani","CHEFFROUR Rayan","CHELLOUG Malak","CHERABCHA Khouloud","CHIHANI Wiame","EULMI Hadjer","HADFI Mohamed Amine","HADJI Abdelwahab","HAMAMDA Mohamed Baha Eddine","HARKAT Ranin","HEZAM Fatma Zohra","KANACHE Asma","KAREK Hibat Errahmane","KECHRADI Ikram","KERMICHE Doursaf Ichrak","KHAMMAR Latifa","KHARFI Aya","KHERAIF Safa","KHETRACHE Malak","KHOUAIDJIA Mallek","LABCHAKI Samira","LADJAILIA Chada Erihane","LAIB Meriem","LASLA Salsabil","LOULOU Oumaima","MADI Yousra","MAROUF Hadil","MEDJANI Rahma","MEDKOURI Wafaa","MESLEM Mohamed Kenzi","SAHTOUT Imene","SAI Douaa","SEDDOUR Isra","SISSAOUI Chahd"],
+"Group 3":["BECHGAOUI Aya","BENDJAZIA Oumaima","DAAS Ines","DJABOURABI Manel","DJEFAFLIA Rayen","DJEFAFLIA Houyem","DJEGHBALLOU Radja","DJELAILIA Hadil","DJOUAD Chihaabdelwakil","GHERARI Douaa","GHEZIL Riheb","GHEZLANE Meriem","GOUASMIA Nada","HADDAD Djihene","MAHAMDIA Fatma","MESSAS Aya","MESSOUBEUR Ouarda","MOUNAAM Ahmed","NAI Nourane","NEZZAR Imen","NIRI Ahlem","OUSLATI Mohamed Haithem","REDJAIMIA Loubna","REZAIGUIA Malak","ROUABHIA Amine","ROUAIBIA Abdelhafid","ROUAINIA Baha","ROUBA Amira","SAYAD Rouaida","SLAMA Alaa","SOUIDANI Lamis","TAIRI Lokmane","TANGOUT Boutheina","TEBIB Chems Assil","TEBIB Amira","TEBIB Hadil","TORCHE Kheir Eddine","TOUAITIA Soufia","TOUALBIA Douaa","TOUARFIA Ikram","YAHI Boutheina","YALFOUF Ouissal","ZAALENE Malak","ZAIRI Aicha","ZIAINA Amina","ZIGHEM Ouail","ZOUGARI Khedidja","ZOUGARI Ines"]
+};
+
+const STORAGE_KEY='l3_attendance_v1';
+// Paste the same Google Apps Script Web App URL used for the quiz
+// apps here to also sync each saved session to the "Attendance" tab
+// in your Google Sheet. This is OPTIONAL — leave it as-is and the
+// tracker keeps working entirely on its own, saved only in this
+// browser, with CSV export as your backup.
+const SHEET_URL="https://script.google.com/macros/s/AKfycbyoG_ndKf4AF_L2xkVAbJHOhabOYxaxbdXEuxM3vnZhWhN84_snQhsAwBaXkXldacLr/exec";
+
+function loadData(){try{const d=localStorage.getItem(STORAGE_KEY);return d?JSON.parse(d):{sessions:[]};}catch(e){return {sessions:[]};}}
+function saveData(d){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d));}catch(e){}}
+let DATA=loadData();
+
+let current=null; // {group, date, subject, marks:{name:status}}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='summary')renderSummary();
+  if(name==='history')renderHistory();
+}
+
+// default date = today
+document.getElementById('sel-date').value=new Date().toISOString().slice(0,10);
+
+document.getElementById('sel-subject').addEventListener('change',function(){
+  document.getElementById('sel-subject-other').style.display=this.value==='__other__'?'block':'none';
+  onSetupChange();
+});
+
+function getSubjectValue(){
+  const sel=document.getElementById('sel-subject').value;
+  if(sel==='__other__')return document.getElementById('sel-subject-other').value.trim();
+  return sel;
+}
+
+function findSession(group,date,subject){
+  return DATA.sessions.find(s=>s.group===group&&s.date===date&&s.subject===subject);
+}
+
+function onSetupChange(){
+  const group=document.getElementById('sel-group').value;
+  const date=document.getElementById('sel-date').value;
+  const subject=getSubjectValue();
+  const flag=document.getElementById('existing-flag');
+  if(group&&date&&subject){
+    const existing=findSession(group,date,subject);
+    if(existing){
+      flag.style.display='block';
+      flag.textContent='A session already exists for this group, date and lecture. Opening it will let you review or correct it.';
+      return;
+    }
+  }
+  flag.style.display='none';
+}
+
+function startSession(){
+  const group=document.getElementById('sel-group').value;
+  const date=document.getElementById('sel-date').value;
+  const subject=getSubjectValue();
+  if(!group||!date||!subject){
+    alert('Please select a group, a date, and a lecture/subject.');
+    return;
+  }
+  const existing=findSession(group,date,subject);
+  const names=DEFAULT_STUDENTS[group].slice().sort();
+  let marks={};
+  if(existing){
+    marks=Object.assign({},existing.marks);
+    names.forEach(n=>{if(!(n in marks))marks[n]='present';});
+  }else{
+    names.forEach(n=>marks[n]='present');
+  }
+  current={group,date,subject,marks,editingId:existing?existing.id:null};
+  document.getElementById('marking-title').textContent=group+' \u2014 '+subject+' \u2014 '+date;
+  renderMarking();
+  document.getElementById('setup-card').style.display='none';
+  document.getElementById('marking-card').style.display='block';
+}
+
+function cycleStatus(s){return s==='present'?'absent':s==='absent'?'late':'present';}
+
+function renderMarking(){
+  const names=DEFAULT_STUDENTS[current.group].slice().sort();
+  const list=document.getElementById('stu-list');
+  list.innerHTML=names.map((n,i)=>{
+    const st=current.marks[n]||'present';
+    return '<div class="stu-row" onclick="toggleStudent(\''+n.replace(/'/g,"\\'")+'\')">'+
+      '<span class="num">'+(i+1)+'</span>'+
+      '<span class="name">'+n+'</span>'+
+      '<span class="status-badge '+st+'">'+st+'</span>'+
+      '</div>';
+  }).join('');
+  updateCounts();
+}
+
+function toggleStudent(name){
+  current.marks[name]=cycleStatus(current.marks[name]||'present');
+  renderMarking();
+}
+
+function markAll(status){
+  Object.keys(current.marks).forEach(n=>current.marks[n]=status);
+  renderMarking();
+}
+
+function updateCounts(){
+  const vals=Object.values(current.marks);
+  document.getElementById('cnt-present').textContent=vals.filter(v=>v==='present').length;
+  document.getElementById('cnt-absent').textContent=vals.filter(v=>v==='absent').length;
+  document.getElementById('cnt-late').textContent=vals.filter(v=>v==='late').length;
+}
+
+function saveSession(){
+  if(current.editingId){
+    const idx=DATA.sessions.findIndex(s=>s.id===current.editingId);
+    DATA.sessions[idx].marks=current.marks;
+  }else{
+    DATA.sessions.push({
+      id:Date.now()+'_'+Math.random().toString(36).slice(2,7),
+      group:current.group,date:current.date,subject:current.subject,marks:current.marks
+    });
+  }
+  saveData(DATA);
+  trySyncToSheet(current);
+}
+
+async function trySyncToSheet(session){
+  const status=document.getElementById('sync-status');
+  status.textContent='Saved locally. This device always keeps your data even if syncing fails.';
+  if(!SHEET_URL||SHEET_URL.indexOf('PASTE_YOUR')===0)return;
+  status.textContent='Saved locally. Syncing to Google Sheet\u2026';
+  const records=Object.keys(session.marks).sort().map(name=>({name,status:session.marks[name]}));
+  const payload={type:'attendance',date:session.date,group:session.group,subject:session.subject,records};
+  try{
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    status.textContent='Saved locally and synced to Google Sheet.';
+  }catch(e){
+    status.textContent='Saved locally. Could not sync to Google Sheet \u2014 your data is safe on this device and you can export it as CSV any time.';
+  }
+}
+
+function cancelSession(){
+  current=null;
+  document.getElementById('marking-card').style.display='none';
+  document.getElementById('setup-card').style.display='block';
+}
+
+// SUMMARY
+function renderSummary(){
+  const group=document.getElementById('sum-group').value;
+  const search=(document.getElementById('sum-search').value||'').toLowerCase().trim();
+  const names=DEFAULT_STUDENTS[group].slice().sort();
+  const groupSessions=DATA.sessions.filter(s=>s.group===group);
+  const rows=names.filter(n=>n.toLowerCase().includes(search)).map(n=>{
+    let present=0,absent=0,late=0;
+    groupSessions.forEach(s=>{
+      const st=s.marks[n];
+      if(st==='present')present++;
+      else if(st==='absent')absent++;
+      else if(st==='late')late++;
+    });
+    return {n,present,absent,late,total:groupSessions.length};
+  });
+  const wrap=document.getElementById('summary-table-wrap');
+  if(!groupSessions.length){
+    wrap.innerHTML='<div class="empty">No sessions saved yet for this group.</div>';
+    return;
+  }
+  wrap.innerHTML='<table class="sum-table"><thead><tr>'+
+    '<th>Student</th><th class="num-col">Sessions</th><th class="num-col">Present</th><th class="num-col">Absent</th><th class="num-col">Late</th>'+
+    '</tr></thead><tbody>'+
+    rows.map(r=>'<tr><td>'+r.n+'</td><td class="num-col">'+r.total+'</td><td class="num-col">'+r.present+'</td>'+
+      '<td class="num-col'+(r.absent>0?' flag':'')+'">'+r.absent+'</td><td class="num-col">'+r.late+'</td></tr>').join('')+
+    '</tbody></table>';
+}
+
+function exportSummaryCSV(){
+  const group=document.getElementById('sum-group').value;
+  const names=DEFAULT_STUDENTS[group].slice().sort();
+  const groupSessions=DATA.sessions.filter(s=>s.group===group);
+  let csv='Group,Student,Sessions,Present,Absent,Late\n';
+  names.forEach(n=>{
+    let present=0,absent=0,late=0;
+    groupSessions.forEach(s=>{
+      const st=s.marks[n];
+      if(st==='present')present++; else if(st==='absent')absent++; else if(st==='late')late++;
+    });
+    csv+='"'+group+'","'+n+'",'+groupSessions.length+','+present+','+absent+','+late+'\n';
+  });
+  downloadCSV(csv,'attendance_summary_'+group.replace(' ','')+'.csv');
+}
+
+function exportFullLogCSV(){
+  let csv='Date,Group,Subject,Student,Status\n';
+  DATA.sessions.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(s=>{
+    Object.keys(s.marks).sort().forEach(n=>{
+      csv+=s.date+',"'+s.group+'","'+s.subject+'","'+n+'",'+s.marks[n]+'\n';
+    });
+  });
+  downloadCSV(csv,'attendance_full_log.csv');
+}
+
+function downloadCSV(csv,filename){
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+// BACKUP / RESTORE — a full JSON snapshot, independent of both this
+// browser's storage and the Google Sheet. Export regularly; Import
+// restores from a previously exported file, merging by session id so
+// re-importing the same backup twice never creates duplicates.
+function exportBackup(){
+  const json=JSON.stringify(DATA,null,2);
+  const blob=new Blob([json],{type:'application/json;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const stamp=new Date().toISOString().slice(0,10);
+  a.href=url;a.download='attendance_backup_'+stamp+'.json';
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+function importBackup(input){
+  const file=input.files[0];
+  const status=document.getElementById('import-status');
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const incoming=JSON.parse(e.target.result);
+      if(!incoming||!Array.isArray(incoming.sessions)){
+        status.innerHTML='<div class="st-err">This file does not look like a valid backup.</div>';return;
+      }
+      const existingIds=new Set(DATA.sessions.map(s=>s.id));
+      let added=0;
+      incoming.sessions.forEach(s=>{
+        if(s&&s.id&&!existingIds.has(s.id)){
+          DATA.sessions.push(s);existingIds.add(s.id);added++;
+        }
+      });
+      saveData(DATA);
+      status.innerHTML='<div class="st-ok">Restored '+added+' session(s) from the backup.'+
+        (added<incoming.sessions.length?' ('+(incoming.sessions.length-added)+' were already present and skipped.)':'')+'</div>';
+      renderHistory();
+    }catch(err){
+      status.innerHTML='<div class="st-err">Could not read this file: '+err.message+'</div>';
+    }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+function renderHistory(){
+  const list=document.getElementById('history-list');
+  const sessions=DATA.sessions.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  if(!sessions.length){
+    list.innerHTML='<div class="empty">No sessions saved yet.</div>';
+    return;
+  }
+  list.innerHTML=sessions.map(s=>{
+    const vals=Object.values(s.marks);
+    const a=vals.filter(v=>v==='absent').length;
+    const l=vals.filter(v=>v==='late').length;
+    const p=vals.filter(v=>v==='present').length;
+    return '<div class="session-item">'+
+      '<div class="meta"><span class="d">'+s.date+'</span> \u2014 '+s.group+
+      '<span class="s">'+s.subject+' &middot; '+p+' present, '+a+' absent, '+l+' late</span></div>'+
+      '<div class="acts">'+
+      '<button onclick="editSession(\''+s.id+'\')">Open</button>'+
+      '<button class="del" onclick="deleteSession(\''+s.id+'\')">Delete</button>'+
+      '</div></div>';
+  }).join('');
+}
+
+function editSession(id){
+  const s=DATA.sessions.find(x=>x.id===id);
+  if(!s)return;
+  document.getElementById('sel-group').value=s.group;
+  document.getElementById('sel-date').value=s.date;
+  const subjSel=document.getElementById('sel-subject');
+  const match=Array.from(subjSel.options).some(o=>o.value===s.subject);
+  if(match){subjSel.value=s.subject;document.getElementById('sel-subject-other').style.display='none';}
+  else{subjSel.value='__other__';document.getElementById('sel-subject-other').style.display='block';document.getElementById('sel-subject-other').value=s.subject;}
+  switchTab('mark');
+  startSession();
+}
+
+function deleteSession(id){
+  if(!confirm('Delete this session? This cannot be undone.'))return;
+  DATA.sessions=DATA.sessions.filter(s=>s.id!==id);
+  saveData(DATA);
+  renderHistory();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>L3 Attendance Check-In &mdash; Literature: Theory &amp; Practice</title>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0f1f3d;--navy2:#1a2f54;--gold:#c9a84c;--gold2:#e8c96a;--cream:#f7f2e8;--cream2:#ede5d0;--red:#8b2020;--green:#2D6A2D;--white:#fff;}
+body{font-family:Georgia,serif;background:var(--navy);color:var(--white);min-height:100vh}
+.wrap{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 16px}
+.logo{text-align:center;margin-bottom:26px}
+.logo-badge{display:inline-block;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.4);border-radius:8px;padding:6px 18px;color:var(--gold);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin-bottom:11px}
+.logo h1{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:5px}
+.logo p{color:var(--cream2);font-size:13px;font-style:italic}
+.card{background:rgba(26,47,84,.95);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:24px 20px;width:100%;max-width:420px}
+.card h2{font-size:15px;color:var(--gold);margin-bottom:5px}
+.card p{font-size:13px;color:var(--cream2);margin-bottom:16px;line-height:1.6}
+label{display:block;color:rgba(255,255,255,.55);font-size:11px;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;margin-top:12px}
+label:first-child{margin-top:0}
+select,input[type=password],input[type=text]{width:100%;padding:12px 13px;border-radius:10px;font-size:14px;border:2px solid rgba(201,168,76,.3);background:rgba(0,0,0,.35);color:var(--white);outline:none;font-family:Georgia,serif;-webkit-appearance:none;appearance:none}
+select option{background:#1a2f54;color:var(--white)}
+select:focus,input:focus{border-color:var(--gold)}
+.btn{width:100%;padding:13px;background:var(--gold);border:none;border-radius:10px;font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;font-family:Georgia,serif;margin-top:16px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-outline{background:transparent;border:2px solid var(--gold);color:var(--gold)}
+.err{color:#ff9090;font-size:13px;margin-top:8px;text-align:center;display:none}
+.footer{text-align:center;margin-top:20px;color:rgba(255,255,255,.2);font-size:11px}
+
+.confirm-box{text-align:center}
+.confirm-mark{width:56px;height:56px;border-radius:50%;background:rgba(45,106,45,.2);border:2px solid var(--green);color:#90ee90;font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.confirm-name{font-size:17px;font-weight:700;margin-bottom:2px}
+.confirm-meta{color:rgba(255,255,255,.5);font-size:12.5px;margin-bottom:3px}
+.confirm-time{color:var(--gold2);font-size:13px;margin-top:10px;margin-bottom:16px}
+.sync-note{font-size:12px;color:rgba(255,255,255,.4);margin-top:10px;line-height:1.6}
+.copy-box{background:rgba(0,0,0,.3);border:1px solid rgba(201,168,76,.25);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--cream2);line-height:1.7;margin-top:12px;word-break:break-word;text-align:left}
+
+.blocked-box{text-align:center}
+.blocked-title{color:#ff9090;font-size:16px;font-weight:700;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <div class="logo-badge">Mohamed-Cherif Messaadia University &middot; Souk Ahras</div>
+    <h1>Attendance Check-In</h1>
+    <p>Literature: Theory &amp; Practice &middot; L3 &middot; 2026&ndash;2027</p>
+  </div>
+
+  <!-- STEP 1: LECTURE + PASSWORD -->
+  <div class="card" id="card-gate">
+    <h2>Today's Lecture</h2>
+    <p>Select today's lecture and enter the password your lecturer announces in class.</p>
+    <label>Lecture</label>
+    <select id="sel-lecture">
+      <option value="">Select lecture&hellip;</option>
+      <option value="1">L1 - Heart of Darkness</option>
+      <option value="2">L2 - The Second Coming</option>
+      <option value="3">L3 - The Waste Land</option>
+      <option value="4">L4 - The Great Gatsby</option>
+      <option value="5">L5 - Mrs Dalloway</option>
+      <option value="6">L6 - Slave Narratives</option>
+      <option value="7">L7 - The Ethics of Living Jim Crow</option>
+      <option value="8">L8 - The Harlem Renaissance</option>
+      <option value="9">L9 - Invisible Man</option>
+      <option value="10">L10 - Go Tell It on the Mountain</option>
+    </select>
+    <label>Password</label>
+    <input type="password" id="gate-pw" placeholder="Password&hellip;" autocomplete="off">
+    <div class="err" id="gate-error">Incorrect password for this lecture.</div>
+    <button class="btn" onclick="checkGate()">Continue &rarr;</button>
+  </div>
+
+  <!-- STEP 2: WHO ARE YOU -->
+  <div class="card" id="card-who" style="display:none">
+    <h2 id="who-title"></h2>
+    <p>Select your own group and name, then confirm your presence. You can only mark yourself.</p>
+    <label>Group</label>
+    <select id="sel-group" onchange="filterStudents()"><option value="">&#8212; Select your group &#8212;</option></select>
+    <label>Your Name</label>
+    <select id="sel-student" disabled><option value="">&#8212; Select your name &#8212;</option></select>
+    <div class="err" id="who-error">Please select your group and your name.</div>
+    <button class="btn" onclick="tryConfirm()">Confirm My Presence &rarr;</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="backToGate()">&#8592; Back</button>
+  </div>
+
+  <!-- STEP 3: DEVICE GUARD BLOCK -->
+  <div class="card blocked-box" id="card-blocked" style="display:none">
+    <div class="blocked-title">Already Used on This Device</div>
+    <p id="blocked-msg" style="text-align:center"></p>
+    <button class="btn btn-outline" onclick="overrideGuard()">This Is a Mistake &mdash; Lecturer Override</button>
+    <button class="btn btn-outline" style="margin-top:8px" onclick="backToGate()">&#8592; Back</button>
+  </div>
+
+
+  <!-- STEP 4: CONFIRMATION -->
+  <div class="card confirm-box" id="card-confirm" style="display:none">
+    <div class="confirm-mark">&#10003;</div>
+    <div class="confirm-name" id="conf-name"></div>
+    <div class="confirm-meta" id="conf-group"></div>
+    <div class="confirm-meta" id="conf-lecture"></div>
+    <div class="confirm-time" id="conf-time"></div>
+    <div id="sync-status" class="sync-note"></div>
+    <div class="copy-box" id="copy-box" style="display:none"></div>
+  </div>
+
+  <div class="footer">Department of English &middot; Dr. Boumous</div>
+</div>
+
+<script>
+const LECTURE_TITLES={1:'Heart of Darkness',2:'The Second Coming',3:'The Waste Land',4:'The Great Gatsby',
+  5:'Mrs Dalloway',6:'Slave Narratives',7:'The Ethics of Living Jim Crow',8:'The Harlem Renaissance',
+  9:'Invisible Man',10:'Go Tell It on the Mountain'};
+const LECTURE_PASSWORDS={1:'Present-Congo1',2:'Present-Falcon2',3:'Present-April3',4:'Present-Green4',
+  5:'Present-Cloud5',6:'Present-Douglass6',7:'Present-Wright7',8:'Present-Harlem8',
+  9:'Present-Ellison9',10:'Present-Baldwin10'};
+const MASTER_PW="Prof@SoukAhras#2026";
+
+// Same optional Sheet URL as the quizzes and the attendance tracker —
+// self check-ins land on a "Self Check-In" tab. This never blocks a
+// student: local confirmation always shows regardless of sync result.
+const SHEET_URL="https://script.google.com/macros/s/AKfycbyoG_ndKf4AF_L2xkVAbJHOhabOYxaxbdXEuxM3vnZhWhN84_snQhsAwBaXkXldacLr/exec";
+
+const DEFAULT_STUDENTS={
+"Group 1":["ABABSIA Salsabil","ABABSIA Lyna","ABBOUDI Meriem","ABDI Ahmed Yassine","AISSAOUI Sandra","AIT OUBELLI Anouar Amine","AMAMRIA Abdelaziz","AMARNIA Lina","AOUAMRIA Rahma","ARAIBIA Ilyas","ARGOUB Nada","ATEK Rahma","BACHA Manel Nour El Houda","BADI Aya","BEDAIRIA Nour El Yakine","BELFAR Mohammed Abdelhadi","BELGHIT Mohamed Abdelkadous","BELOUCIF Djena","BENAOUADI Isra","BENCHAABANE Yasser","BENGHIDA Feriel","BENNACER Nermine","BOUHENCHIR Rahma","CHAALANE Ayat Allah","CHAALENE Khaoula","CHABACA Belkis Doua","DERBAL Abdelaziz","DRIDI Ikhlas","FERAHNA Belgacem","GUEHRIA Aissa Abd El Moudjoud","GUELMANI Rahma","HABTOUN Selma","HACHAD Nardjes","HADFI Tahar","HAMADI Ritadj","HAMAIDIA Rahma","HANDEL Mohamed El Hadi","HELAIMIA Djihane","KEDADRIA Yahia","KELBOUZ Rachida","KHEMAISSIA Ines","LADJAILIA Amani","LADJAILIA Roumaissa","LIMAMI Ilhem","REDJAIBIA Amani","SAAIDIA Meriama Souha","TELAIDJIA Rayane","TEMIMI Mohammed Temim","TEMIMI Nourelyakine","YAHIA Grairia","YAHIA Mohamed Abderraouf","ZAALENE Malak Nour El Imene"],
+"Group 2":["BENDJEDID Fatma Zohra","BENDJERBOUH Riadh Abdel Djalil","BENFAIALA Abir","BENOUARET Serour","BENSOLA Khouloud","BENYAHIA Haithem","BENZINE Kenza","BERRIG Ines","BOUADJILA Ouissal","BOUAFIA Chaima","BOUKERDOUGHA Aya","BOULIFA Amel","BOUMAZA Khaled Amir","BOUMESHAD Amani","BOURBIA Esma","BOUROUINA Kinza","BOUSEBOUA Amani","CHEFFROUR Rayan","CHELLOUG Malak","CHERABCHA Khouloud","CHIHANI Wiame","EULMI Hadjer","HADFI Mohamed Amine","HADJI Abdelwahab","HAMAMDA Mohamed Baha Eddine","HARKAT Ranin","HEZAM Fatma Zohra","KANACHE Asma","KAREK Hibat Errahmane","KECHRADI Ikram","KERMICHE Doursaf Ichrak","KHAMMAR Latifa","KHARFI Aya","KHERAIF Safa","KHETRACHE Malak","KHOUAIDJIA Mallek","LABCHAKI Samira","LADJAILIA Chada Erihane","LAIB Meriem","LASLA Salsabil","LOULOU Oumaima","MADI Yousra","MAROUF Hadil","MEDJANI Rahma","MEDKOURI Wafaa","MESLEM Mohamed Kenzi","SAHTOUT Imene","SAI Douaa","SEDDOUR Isra","SISSAOUI Chahd"],
+"Group 3":["BECHGAOUI Aya","BENDJAZIA Oumaima","DAAS Ines","DJABOURABI Manel","DJEFAFLIA Rayen","DJEFAFLIA Houyem","DJEGHBALLOU Radja","DJELAILIA Hadil","DJOUAD Chihaabdelwakil","GHERARI Douaa","GHEZIL Riheb","GHEZLANE Meriem","GOUASMIA Nada","HADDAD Djihene","MAHAMDIA Fatma","MESSAS Aya","MESSOUBEUR Ouarda","MOUNAAM Ahmed","NAI Nourane","NEZZAR Imen","NIRI Ahlem","OUSLATI Mohamed Haithem","REDJAIMIA Loubna","REZAIGUIA Malak","ROUABHIA Amine","ROUAIBIA Abdelhafid","ROUAINIA Baha","ROUBA Amira","SAYAD Rouaida","SLAMA Alaa","SOUIDANI Lamis","TAIRI Lokmane","TANGOUT Boutheina","TEBIB Chems Assil","TEBIB Amira","TEBIB Hadil","TORCHE Kheir Eddine","TOUAITIA Soufia","TOUALBIA Douaa","TOUARFIA Ikram","YAHI Boutheina","YALFOUF Ouissal","ZAALENE Malak","ZAIRI Aicha","ZIAINA Amina","ZIGHEM Ouail","ZOUGARI Khedidja","ZOUGARI Ines"]
+};
+
+let lectureNum=null;
+const GUARD_KEY='checkin_guard_v1';
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function loadGuard(){try{const d=localStorage.getItem(GUARD_KEY);return d?JSON.parse(d):{};}catch(e){return {};}}
+function saveGuard(g){try{localStorage.setItem(GUARD_KEY,JSON.stringify(g));}catch(e){}}
+
+function checkGate(){
+  const sel=document.getElementById('sel-lecture').value;
+  const pw=document.getElementById('gate-pw').value.trim();
+  const err=document.getElementById('gate-error');
+  if(!sel){err.style.display='block';err.textContent='Please select a lecture.';return;}
+  if(pw!==LECTURE_PASSWORDS[sel]){
+    err.style.display='block';err.textContent='Incorrect password for this lecture.';
+    document.getElementById('gate-pw').value='';document.getElementById('gate-pw').focus();
+    return;
+  }
+  err.style.display='none';
+  lectureNum=parseInt(sel,10);
+  const guardKey=lectureNum+'_'+todayStr();
+  const guard=loadGuard();
+  document.getElementById('who-title').textContent='L'+lectureNum+' - '+LECTURE_TITLES[lectureNum];
+  if(guard[guardKey]){
+    showAlreadyConfirmed(guard[guardKey]);
+    return;
+  }
+  const gs=document.getElementById('sel-group');
+  gs.innerHTML='<option value="">Select your group</option>';
+  Object.keys(DEFAULT_STUDENTS).sort().forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;gs.appendChild(o);});
+  document.getElementById('sel-student').innerHTML='<option value="">Select your name</option>';
+  document.getElementById('sel-student').disabled=true;
+  document.getElementById('card-gate').style.display='none';
+  document.getElementById('card-who').style.display='block';
+}
+
+function filterStudents(){
+  const grp=document.getElementById('sel-group').value;
+  const ss=document.getElementById('sel-student');
+  if(!grp){ss.disabled=true;ss.innerHTML='<option value="">--</option>';return;}
+  const stus=(DEFAULT_STUDENTS[grp]||[]).slice().sort();
+  ss.innerHTML='<option value="">Select your name</option>';
+  stus.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;ss.appendChild(o);});
+  ss.disabled=false;
+}
+
+function tryConfirm(){
+  const grp=document.getElementById('sel-group').value;
+  const stu=document.getElementById('sel-student').value;
+  const err=document.getElementById('who-error');
+  if(!grp||!stu){err.style.display='block';return;}
+  err.style.display='none';
+  const guardKey=lectureNum+'_'+todayStr();
+  const guard=loadGuard();
+  const existing=guard[guardKey];
+  if(existing&&existing.name!==stu){
+    document.getElementById('blocked-msg').textContent=
+      'This device already confirmed presence for '+existing.name+' in this lecture today. '+
+      'A device can only confirm one student per lecture per day, to help prevent one phone checking in for several people.';
+    document.getElementById('card-who').style.display='none';
+    document.getElementById('card-blocked').style.display='block';
+    return;
+  }
+  doConfirm(grp,stu,guardKey);
+}
+
+function overrideGuard(){
+  const pw=prompt('Lecturer override \u2014 enter the master password to allow this device to confirm a different student:');
+  if(pw===null)return;
+  if(pw!==MASTER_PW){alert('Incorrect master password.');return;}
+  document.getElementById('card-blocked').style.display='none';
+  document.getElementById('card-who').style.display='block';
+  const grp=document.getElementById('sel-group').value;
+  const stu=document.getElementById('sel-student').value;
+  const guardKey=lectureNum+'_'+todayStr();
+  doConfirm(grp,stu,guardKey);
+}
+
+function doConfirm(grp,stu,guardKey){
+  const now=new Date();
+  const guard=loadGuard();
+  guard[guardKey]={name:stu,group:grp,at:now.getTime()};
+  saveGuard(guard);
+  showConfirmation(grp,stu,now);
+  sendCheckin(grp,stu,now);
+}
+
+function showConfirmation(grp,stu,now){
+  document.getElementById('card-gate').style.display='none';
+  document.getElementById('card-who').style.display='none';
+  document.getElementById('card-blocked').style.display='none';
+  document.getElementById('conf-name').textContent=stu;
+  document.getElementById('conf-group').textContent=grp;
+  document.getElementById('conf-lecture').textContent='L'+lectureNum+' - '+LECTURE_TITLES[lectureNum];
+  document.getElementById('conf-time').textContent=now.toLocaleDateString('en-GB')+' at '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('card-confirm').style.display='block';
+}
+
+function showAlreadyConfirmed(entry){
+  const now=new Date(entry.at);
+  document.getElementById('card-gate').style.display='none';
+  document.getElementById('conf-name').textContent=entry.name;
+  document.getElementById('conf-group').textContent=entry.group;
+  document.getElementById('conf-lecture').textContent='L'+lectureNum+' - '+LECTURE_TITLES[lectureNum];
+  document.getElementById('conf-time').textContent='Already confirmed on '+now.toLocaleDateString('en-GB')+' at '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('sync-status').textContent='';
+  document.getElementById('copy-box').style.display='none';
+  document.getElementById('card-confirm').style.display='block';
+}
+
+async function sendCheckin(grp,stu,now){
+  const status=document.getElementById('sync-status');
+  const copyBox=document.getElementById('copy-box');
+  const summary='L'+lectureNum+' - '+LECTURE_TITLES[lectureNum]+' | '+stu+' ('+grp+') | '+
+    now.toLocaleDateString('en-GB')+' '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  if(!SHEET_URL||SHEET_URL.indexOf('PASTE_YOUR')===0){
+    status.textContent='Recorded on this device. Ask your lecturer to confirm it was received.';
+    copyBox.style.display='block';copyBox.textContent=summary;
+    return;
+  }
+  status.textContent='Recording your presence\u2026';
+  const payload={
+    type:'checkin',
+    date:now.toLocaleDateString('en-GB'),
+    time:now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}),
+    lectureNum:lectureNum,lecture:'L'+lectureNum+' - '+LECTURE_TITLES[lectureNum],
+    studentName:stu,group:grp
+  };
+  try{
+    await fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    status.textContent='Your presence has been recorded.';
+    copyBox.style.display='none';
+  }catch(e){
+    status.textContent='Could not reach the server. Your confirmation is saved on this device \u2014 if this keeps happening, show your lecturer the box below.';
+    copyBox.style.display='block';copyBox.textContent=summary;
+  }
+}
+
+function backToGate(){
+  document.getElementById('card-who').style.display='none';
+  document.getElementById('card-blocked').style.display='none';
+  document.getElementById('card-confirm').style.display='none';
+  document.getElementById('card-gate').style.display='block';
+  document.getElementById('sel-lecture').value='';
+  document.getElementById('gate-pw').value='';
+  document.getElementById('gate-error').style.display='none';
+}
+</script>
+</body>
+</html>
